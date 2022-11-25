@@ -57,23 +57,23 @@ class AirConditioner:
         self.__device.apply()
         Thread(target=self.__sync, daemon=True).start()
 
-    def cooling_temp(self) -> float:
-        return self.__cooling_temp
+    def cooling_temp(self) -> int:
+        return int(round(self.__cooling_temp))
 
-    def set_cooling_temp(self, temp: float):
+    def set_cooling_temp(self, temp: int):
         self.__cooling_temp = temp
 
-    def heating_temp(self) -> float:
-        return self.__heating_temp
+    def heating_temp(self) -> int:
+        return int(round(self.__heating_temp))
 
-    def set_heating_temp(self, temp: float):
+    def set_heating_temp(self, temp: int):
         self.__heating_temp = temp
 
     def __remaining_operation_time_sec(self) -> int:
         if self.__program_deactivation_time is None:
             return 0
         else:
-            return int((self.__program_deactivation_time - datetime.now()).total_seconds())
+            return int(round((self.__program_deactivation_time - datetime.now()).total_seconds()))
 
     def power(self) -> bool:
         self.__sync(max_age_sec=3)
@@ -85,25 +85,25 @@ class AirConditioner:
         self.__device.prompt_tone = True
         self.__apply()
 
-    def target_temperature(self) -> float:
+    def target_temperature(self) -> int:
         self.__sync(max_age_sec=3)
-        return self.__device.target_temperature
+        return int(round(self.__device.target_temperature))
 
-    def set_target_temperature(self, target_temp: float):
+    def set_target_temperature(self, target_temp: int):
         self.__device.target_temperature = target_temp
         self.__apply()
 
-    def indoor_temperature(self) -> float:
+    def indoor_temperature(self) -> int:
         self.__sync(max_age_sec=3)
-        return self.__device.indoor_temperature
+        return int(round(self.__device.indoor_temperature,0))
 
-    def outdoor_temperature(self) -> float:
+    def outdoor_temperature(self) -> int:
         self.__sync(max_age_sec=3)
-        return self.__device.outdoor_temperature
+        return int(round(self.__device.outdoor_temperature,0))
 
     def fan_speed(self) -> int:
         self.__sync(max_age_sec=3)
-        return self.__device.fan_speed
+        return int(self.__device.fan_speed)
 
     def operational_mode(self) -> str:
         self.__sync(max_age_sec=3)
@@ -146,18 +146,18 @@ class AirConditioner:
                 sleep(60)
                 Thread(target=self.__program_deactivation_watchdog, daemon=True).start()
 
-    def cooling_remaining_minutes(self) -> float:
+    def cooling_remaining_minutes(self) -> int:
         if self.__device.operational_mode == ac.operational_mode_enum.cool:
-            return round(self.__remaining_operation_time_sec() / 60, 1)
+            return int(round(self.__remaining_operation_time_sec() / 60, 1))
         else:
             return 0
 
     def set_cooling_remaining_minutes(self, duration: int):
         self.__activate_program_until(datetime.now() + timedelta(minutes=duration), self.__cooling_temp, ac.operational_mode_enum.cool)
 
-    def heating_remaining_minutes(self) -> float:
+    def heating_remaining_minutes(self) -> int:
         if self.__device.operational_mode == ac.operational_mode_enum.heat:
-            return round(self.__remaining_operation_time_sec() / 60, 1)
+            return int(round(self.__remaining_operation_time_sec() / 60, 1))
         else:
             return 0
 

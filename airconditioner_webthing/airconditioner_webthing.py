@@ -39,7 +39,7 @@ class AirConditionerThing(Thing):
                      self.target_temperature,
                      metadata={
                          'title': 'Target Temperature',
-                         "type": "number",
+                         "type": "integer",
                          'description': 'The target temperature',
                          'readOnly': False,
                      }))
@@ -51,7 +51,7 @@ class AirConditionerThing(Thing):
                      self.heating_temp,
                      metadata={
                          'title': 'Heating Temperature',
-                         "type": "number",
+                         "type": "integer",
                          'description': 'The target temperature in heating mode',
                          'readOnly': False,
                      }))
@@ -63,7 +63,7 @@ class AirConditionerThing(Thing):
                      self.cooling_temp,
                      metadata={
                          'title': 'Cooling Temperature',
-                         "type": "number",
+                         "type": "integer",
                          'description': 'The target temperature in cooling mode',
                          'readOnly': False,
                      }))
@@ -75,7 +75,7 @@ class AirConditionerThing(Thing):
                      self.outdoor_temperature,
                      metadata={
                          'title': 'Outdoor Temperature',
-                         "type": "number",
+                         "type": "integer",
                          'description': 'The outdoor temperature',
                          'readOnly': True,
                      }))
@@ -87,7 +87,7 @@ class AirConditionerThing(Thing):
                      self.indoor_temperature,
                      metadata={
                          'title': 'Indoor Temperature',
-                         "type": "number",
+                         "type": "integer",
                          'description': 'The indoor temperature',
                          'readOnly': True,
                      }))
@@ -111,7 +111,7 @@ class AirConditionerThing(Thing):
                      self.fan_speed,
                      metadata={
                          'title': 'Fan Speed',
-                         "type": "number",
+                         "type": "integer",
                          'description': 'The fan speed',
                          'readOnly': True,
                      }))
@@ -135,7 +135,7 @@ class AirConditionerThing(Thing):
                      self.cooling_remaining_minutes,
                      metadata={
                          'title': 'Cooling remaining minutes',
-                         "type": "number",
+                         "type": "integer",
                          'description': 'The remaining cooling duration in minutes',
                          'readOnly': False,
                      }))
@@ -147,7 +147,7 @@ class AirConditionerThing(Thing):
                      self.heating_remaining_minutes,
                      metadata={
                          'title': 'Heating remaining minutes',
-                         "type": "number",
+                         "type": "integer",
                          'description': 'The remaining heating duration in minutes',
                          'readOnly': False,
                      }))
