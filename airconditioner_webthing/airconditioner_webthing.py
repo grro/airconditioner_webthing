@@ -20,18 +20,6 @@ class AirConditionerThing(Thing):
 
         self.ac = ac
 
-        self.fan_speed = Value(ac.fan_speed())
-        self.add_property(
-            Property(self,
-                     'fan_speed',
-                     self.fan_speed,
-                     metadata={
-                         'title': 'Fan Speed',
-                         "type": "integer",
-                         'description': 'The fan speed',
-                         'readOnly': True,
-                     }))
-
         self.outdoor_temperature = Value(ac.outdoor_temperature())
         self.add_property(
             Property(self,
@@ -80,6 +68,18 @@ class AirConditionerThing(Thing):
                          'readOnly': False,
                      }))
 
+        self.fan_speed = Value(ac.fan_speed())
+        self.add_property(
+            Property(self,
+                     'fan_speed',
+                     self.fan_speed,
+                     metadata={
+                         'title': 'Fan Speed',
+                         "type": "integer",
+                         'description': 'The fan speed',
+                         'readOnly': True,
+                     }))
+
         self.power = Value(ac.power(), ac.set_power)
         self.add_property(
             Property(self,
@@ -95,10 +95,10 @@ class AirConditionerThing(Thing):
         self.run_util = Value(ac.run_util(), ac.set_run_util)
         self.add_property(
             Property(self,
-                     'run_util',
+                     'program_run_util',
                      self.run_util,
                      metadata={
-                         'title': 'Run util',
+                         'title': 'Program run util',
                          "type": "string",
                          'description': 'the end time of air conditioner execution (format: %Y.%m.%dT%H:%M:%)',
                          'readOnly': False,
