@@ -9,11 +9,11 @@ class AirConditionerThing(Thing):
 
     # regarding capabilities refer https://iot.mozilla.org/schemas
     # there is also another schema registry http://iotschema.org/docs/full.html not used by webthing
-    def __init__(self, description: str, ac: AirConditioner):
+    def __init__(self, description: str, ac: AirConditioner, name: str ):
         Thing.__init__(
             self,
             'urn:dev:ops:AirConditioner-1',
-            'AirConditioner',
+            ('AirConditioner ' + name).strip(),
             ['MultiLevelSensor'],
             description
         )
@@ -171,9 +171,9 @@ class AirConditionerThing(Thing):
         self.fan_speed.notify_of_external_update(self.ac.fan_speed())
 
 
-def run_server(description: str, port: int, ip_address: str, id: int):
+def run_server(description: str, port: int, ip_address: str, id: int, name:str):
     ac = AirConditioner(ip_address, id)
-    ac_thing = AirConditionerThing(description, ac)
+    ac_thing = AirConditionerThing(description, ac, name)
     server = WebThingServer(SingleThing(ac_thing), port=port, disable_host_validation=True)
     logging.info('running webthing server http://localhost:' + str(port))
     try:
