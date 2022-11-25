@@ -57,18 +57,6 @@ class AirConditioner:
         self.__device.apply()
         Thread(target=self.__sync, daemon=True).start()
 
-    def cooling_temp(self) -> int:
-        return int(round(self.__cooling_temp))
-
-    def set_cooling_temp(self, temp: int):
-        self.__cooling_temp = temp
-
-    def heating_temp(self) -> int:
-        return int(round(self.__heating_temp))
-
-    def set_heating_temp(self, temp: int):
-        self.__heating_temp = temp
-
     def __remaining_operation_time_sec(self) -> int:
         if self.__program_deactivation_time is None:
             return 0
@@ -118,15 +106,39 @@ class AirConditioner:
         else:
             return "unknown (" + str(self.__device.operational_mode) + ")"
 
-    def __activate_program_until(self, end_date: datetime, target_temperature: float, operational_mode: int):
-        self.__program_deactivation_time = end_date
+    def set_operational_mode(self, mode: str):
+        if mode == ac.operational_mode_enum.cool:
+            self.__device.operational_mode = ac.operational_mode_enum.cool
+            self.__apply()
+        elif mode == ac.operational_mode_enum.heat:
+            self.__device.operational_mode = ac.operational_mode_enum.heat
+            self.__apply()
+        elif mode == ac.operational_mode_enum.auto:
+            self.__device.operational_mode = ac.operational_mode_enum.auto
+            self.__apply()
+        elif mode == ac.operational_mode_enum.dry:
+            self.__device.operational_mode = ac.operational_mode_enum.dry
+            self.__apply()
+        else:
+            logging.warning("unknown mode " + mode + " to be set. igmoring it")
+
+    def remaining_minutes(self) -> float:
+        return round(self.__remaining_operation_time_sec() / 60, 1)
+
+    def run_util(self) -> str:
+        time = self.__program_deactivation_time
+        if time is None:
+            return ""
+        else:
+            return time.strftime("%Y.%m.%dT%H:%M:%S")
+
+    def set_run_util(self, end_date: str):
+        self.__program_deactivation_time = datetime.strptime(end_date, "%Y.%m.%dT%H:%M:%S")
         try:
             self.__device.prompt_tone = True
             self.__device.power_state = True
-            self.__device.target_temperature = target_temperature
-            self.__device.operational_mode = operational_mode
             self.__apply()
-            logging.info("starting air conditioner (target temp: " + str(target_temperature) + "C, duration: " + str(round(self.__remaining_operation_time_sec())) + " sec)")
+            logging.info("starting air conditioner (target temp: " + str(self.target_temperature()) + "C, duration: " + str(round(self.remaining_minutes())) + " minutes)")
         finally:
             Thread(target=self.__program_deactivation_watchdog, daemon=True).start()
 
@@ -145,24 +157,6 @@ class AirConditioner:
             else:
                 sleep(60)
                 Thread(target=self.__program_deactivation_watchdog, daemon=True).start()
-
-    def cooling_remaining_minutes(self) -> int:
-        if self.__device.operational_mode == ac.operational_mode_enum.cool:
-            return int(round(self.__remaining_operation_time_sec() / 60, 1))
-        else:
-            return 0
-
-    def set_cooling_remaining_minutes(self, duration: int):
-        self.__activate_program_until(datetime.now() + timedelta(minutes=duration), self.__cooling_temp, ac.operational_mode_enum.cool)
-
-    def heating_remaining_minutes(self) -> int:
-        if self.__device.operational_mode == ac.operational_mode_enum.heat:
-            return int(round(self.__remaining_operation_time_sec() / 60, 1))
-        else:
-            return 0
-
-    def set_heating_remaining_minutes(self, duration: int):
-        self.__activate_program_until(datetime.now() + timedelta(minutes=duration), self.__heating_temp, ac.operational_mode_enum.heat)
 
     def __str__(self):
         self.__sync()
