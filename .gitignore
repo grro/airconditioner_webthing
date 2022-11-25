@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+/test/airconditioner_test.py
+/airconditioner_webthing.iml
+/test/run_webthing.py
+/out
+/airconditioner_webthing.egg-info
+/dist
+/.idea
