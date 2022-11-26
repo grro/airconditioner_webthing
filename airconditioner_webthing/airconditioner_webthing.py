@@ -9,7 +9,7 @@ class AirConditionerThing(Thing):
 
     # regarding capabilities refer https://iot.mozilla.org/schemas
     # there is also another schema registry http://iotschema.org/docs/full.html not used by webthing
-    def __init__(self, description: str, ac: AirConditioner, name: str ):
+    def __init__(self, description: str, ac: AirConditioner, name: str):
         Thing.__init__(
             self,
             'urn:dev:ops:AirConditioner-1',
@@ -95,10 +95,10 @@ class AirConditionerThing(Thing):
         self.run_util = Value(ac.run_util(), ac.set_run_util)
         self.add_property(
             Property(self,
-                     'program_run_util',
+                     'run_util',
                      self.run_util,
                      metadata={
-                         'title': 'Program run util',
+                         'title': 'run util',
                          "type": "string",
                          'description': 'the end time of air conditioner execution (format: %Y.%m.%dT%H:%M:%)',
                          'readOnly': False,

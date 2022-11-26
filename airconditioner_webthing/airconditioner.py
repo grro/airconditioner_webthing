@@ -14,7 +14,8 @@ logging.basicConfig(level=logging.INFO)
 
 class AirConditioner:
 
-    def __init__(self, ip_address: str, id: int):
+    def __init__(self, ip_address: str, id: int, max_program_duration: int = 20*60):
+        self.max_program_duration = max_program_duration
         self.__device = ac(ip_address, id, 6444)
         self.__datetime_last_refresh = datetime.now() - timedelta(days=1)
         self.__program_deactivation_time = None
@@ -132,14 +133,18 @@ class AirConditioner:
     def set_run_util(self, end_date: str):
         time = datetime.strptime(end_date, "%Y.%m.%dT%H:%M:%S")
         if time > datetime.now():
-            self.__program_deactivation_time = time
-            try:
-                self.__device.prompt_tone = True
-                self.__device.power_state = True
-                self.__apply()
-                logging.info("starting air conditioner (mode: " + str(self.__device.operational_mode) + " target temp: " + str(self.__device.target_temperature) + "C, duration: " + str(self.__remaining_program_time()) + " sec)")
-            finally:
-                Thread(target=self.__program_deactivation_watchdog, daemon=True).start()
+            duration_sec = (time - datetime.now()).total_seconds()
+            if duration_sec > self.max_program_duration:
+                raise Exception("max program duration of " + str(self.max_program_duration) + " sec exceeded. Requested " + str(duration_sec) + " sec")
+            else:
+                self.__program_deactivation_time = time
+                try:
+                    self.__device.prompt_tone = True
+                    self.__device.power_state = True
+                    self.__apply()
+                    logging.info("starting air conditioner (mode: " + str(self.__device.operational_mode) + " target temp: " + str(self.__device.target_temperature) + "C, duration: " + str(self.__remaining_program_time()) + " sec)")
+                finally:
+                    Thread(target=self.__program_deactivation_watchdog, daemon=True).start()
         else:
             raise Exception(end_date + " is in the past. Will be ignored")
 
