@@ -10,13 +10,13 @@ The airconditioner_webthing package exposes a http webthing endpoint which suppo
 curl http://192.168.0.23:7122/properties 
 
 {
-  "outdoor_temperature": 0,
-  "indoor_temperature": 0,
-  "target_temperature": 17,
-  "operational_mode": "auto",
-  "fan_speed": 102,
-  "power": false,
-  "program_run_util": ""
+   "outdoor_temperature": 4,
+   "indoor_temperature": 22,
+   "target_temperature": 23,
+   "operational_mode": "heat",
+   "fan_speed": 102,
+   "power": false,
+   "run_util": ""
 }
 ```
 

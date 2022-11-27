@@ -4,7 +4,7 @@ import json
 from threading import Thread
 from time import sleep
 from msmart.device import air_conditioning as ac
-from datetime import  datetime, timedelta
+from datetime import datetime, timedelta
 
 
 
@@ -19,20 +19,24 @@ class AirConditioner:
         self.__device = ac(ip_address, id, 6444)
         self.__datetime_last_refresh = datetime.now() - timedelta(days=1)
         self.__program_deactivation_time = None
+        self.__program_mode = 'cool'
+        self.__program_target_temp = 23
         self.__listeners = set()
         Thread(target=self.__run_refresh, daemon=True).start()
 
     def __run_refresh(self):
         start = datetime.now()
         while True:
-            sleep(6)
-            wait_time_sec = 5 if self.power else (6*60)
-            if (datetime.now() - start).total_seconds() > wait_time_sec:
-                start = datetime.now()
-                try:
-                    self.__sync(max_age_sec=10)
-                except Exception as e:
-                    pass
+            try:
+                sleep(6)
+                elapsed_sec = (datetime.now() - start).total_seconds()
+                threshold_sec = 5 if self.__device.power_state else (5*60)   # 5 sec or 5 min
+                if elapsed_sec > threshold_sec:
+                    start = datetime.now()
+                    self.__sync()
+            except Exception as e:
+                logging.warning("error occurred by refreshing state " + str(e))
+                sleep(30)
 
     def register_listener(self, listener):
         self.__listeners.add(listener)
@@ -44,8 +48,11 @@ class AirConditioner:
         except Exception as e:
             pass
 
-    def __sync(self, max_age_sec: int = 0):
+    def __sync(self, max_age_sec: int = 0, delay_sec: int = None):
+        if delay_sec is not None:
+            sleep(delay_sec)
         if (datetime.now() - self.__datetime_last_refresh).total_seconds() >= max_age_sec:
+            logging.debug("executing sync")
             self.__datetime_last_refresh = datetime.now()
             self.__device.refresh()
             if not self.__device.power_state:
@@ -53,8 +60,9 @@ class AirConditioner:
             self.__notify_listener()
 
     def __apply(self):
+        logging.debug("executing apply")
         self.__device.apply()
-        Thread(target=self.__sync, daemon=True).start()
+        Thread(target=self.__sync, kwargs={'delay_sec': 1}, daemon=True).start()
 
     def power(self) -> bool:
         self.__sync(max_age_sec=3)
@@ -86,6 +94,16 @@ class AirConditioner:
         self.__sync(max_age_sec=3)
         return int(self.__device.fan_speed)
 
+    def __mode_to_id(self, mode:str) -> int:
+        if mode == 'cool':
+            return ac.operational_mode_enum.cool
+        elif mode == 'heat':
+            return ac.operational_mode_enum.heat
+        elif mode == 'dry':
+            return ac.operational_mode_enum.dry
+        else:
+            return ac.operational_mode_enum.auto
+
     def operational_mode(self) -> str:
         self.__sync(max_age_sec=3)
         if self.__device.operational_mode == ac.operational_mode_enum.cool:
@@ -97,21 +115,7 @@ class AirConditioner:
         elif self.__device.operational_mode == ac.operational_mode_enum.dry:
             return "dry"
         else:
-            return "unknown (" + str(self.__device.operational_mode) + ")"
-
-    def set_operational_mode(self, mode: str):
-        if mode == 'cool':
-            self.__device.operational_mode  = ac.operational_mode_enum.cool
-        elif mode == 'heat':
-            self.__device.operational_mode  = ac.operational_mode_enum.heat
-        elif mode == 'auto':
-            self.__device.operational_mode  = ac.operational_mode_enum.auto
-        elif mode == 'dry':
-            self.__device.operational_mode  = ac.operational_mode_enum.dry
-        else:
-            logging.warning("unknown mode " + mode + " to be set. igmoring it")
-            return
-        self.__apply()
+            raise Exception("unknown (" + str(self.__device.operational_mode) + ")")
 
     def __remaining_program_time(self) -> float:
         if self.__program_deactivation_time is None:
@@ -123,14 +127,28 @@ class AirConditioner:
             else:
                 return remaining_sec
 
-    def run_util(self) -> str:
+    def program_run_util(self) -> str:
         time = self.__program_deactivation_time
         if time is None:
             return ""
         else:
             return time.strftime("%Y.%m.%dT%H:%M:%S")
 
-    def set_run_util(self, end_date: str):
+    def program_mode(self) -> str:
+        return self.__program_mode
+
+    def set_program_mode(self, mode: str):
+        self.__program_mode = mode
+        self.__notify_listener()
+
+    def program_target_temperature(self) -> int:
+        return self.__program_target_temp
+
+    def set_program_target_temperature(self, target_temp: int):
+        self.__program_target_temp = target_temp
+        self.__notify_listener()
+
+    def set_program_run_util(self, end_date: str):
         time = datetime.strptime(end_date, "%Y.%m.%dT%H:%M:%S")
         if time > datetime.now():
             duration_sec = (time - datetime.now()).total_seconds()
@@ -140,9 +158,11 @@ class AirConditioner:
                 self.__program_deactivation_time = time
                 try:
                     self.__device.prompt_tone = True
+                    self.__device.operational_mode = self.__mode_to_id(self.__program_mode)
+                    self.__device.target_temperature = self.__program_target_temp
                     self.__device.power_state = True
                     self.__apply()
-                    logging.info("starting air conditioner (mode: " + str(self.__device.operational_mode) + " target temp: " + str(self.__device.target_temperature) + "C, duration: " + str(self.__remaining_program_time()) + " sec)")
+                    logging.info("starting air conditioner (mode: " + str(self.__program_mode) + " target temp: " + str(self.__program_target_temp) + "C, duration: " + str(self.__remaining_program_time()) + " sec)")
                 finally:
                     Thread(target=self.__program_deactivation_watchdog, daemon=True).start()
         else:

@@ -44,7 +44,7 @@ class AirConditionerThing(Thing):
                          'readOnly': True,
                      }))
 
-        self.target_temperature = Value(ac.target_temperature(), ac.set_target_temperature)
+        self.target_temperature = Value(ac.target_temperature())
         self.add_property(
             Property(self,
                      'target_temperature',
@@ -53,10 +53,10 @@ class AirConditionerThing(Thing):
                          'title': 'Target Temperature',
                          "type": "integer",
                          'description': 'The target temperature',
-                         'readOnly': False,
+                         'readOnly': True,
                      }))
 
-        self.operational_mode = Value(ac.operational_mode(), ac.set_operational_mode)
+        self.operational_mode = Value(ac.operational_mode())
         self.add_property(
             Property(self,
                      'operational_mode',
@@ -64,8 +64,8 @@ class AirConditionerThing(Thing):
                      metadata={
                          'title': 'Operational mode',
                          "type": "string",
-                         'description': 'The operational mode (supported: heat, cool, auto. dry)',
-                         'readOnly': False,
+                         'description': 'The operational mode (supported: heat, cool, auto, dry)',
+                         'readOnly': True,
                      }))
 
         self.fan_speed = Value(ac.fan_speed())
@@ -92,13 +92,37 @@ class AirConditionerThing(Thing):
                          'readOnly': False,
                      }))
 
-        self.run_util = Value(ac.run_util(), ac.set_run_util)
+        self.program_mode = Value(ac.program_mode(), ac.set_program_mode)
         self.add_property(
             Property(self,
-                     'run_util',
-                     self.run_util,
+                     'program_mode',
+                     self.program_mode,
                      metadata={
-                         'title': 'run util',
+                         'title': 'Program mode',
+                         "type": "string",
+                         'description': 'The program operational mode (supported: heat, cool, auto, dry)',
+                         'readOnly': False,
+                     }))
+
+        self.program_target_temperature = Value(ac.program_target_temperature(), ac.set_program_target_temperature)
+        self.add_property(
+            Property(self,
+                     'program_target_temperature',
+                     self.program_target_temperature,
+                     metadata={
+                         'title': 'Program target temperature',
+                         "type": "number",
+                         'description': 'The program target temp',
+                         'readOnly': False,
+                     }))
+
+        self.program_run_util = Value(ac.program_run_util(), ac.set_program_run_util)
+        self.add_property(
+            Property(self,
+                     'program_run_util',
+                     self.program_run_util,
+                     metadata={
+                         'title': 'program run util',
                          "type": "string",
                          'description': 'the end time of air conditioner execution (format: %Y.%m.%dT%H:%M:%)',
                          'readOnly': False,
@@ -117,7 +141,9 @@ class AirConditionerThing(Thing):
         self.indoor_temperature.notify_of_external_update(self.ac.indoor_temperature())
         self.outdoor_temperature.notify_of_external_update(self.ac.outdoor_temperature())
         self.fan_speed.notify_of_external_update(self.ac.fan_speed())
-        self.run_util.notify_of_external_update(self.ac.run_util())
+        self.program_target_temperature.notify_of_external_update(self.ac.program_target_temperature())
+        self.program_mode.notify_of_external_update(self.ac.program_mode())
+        self.program_run_util.notify_of_external_update(self.ac.program_run_util())
 
 
 def run_server(description: str, port: int, ip_address: str, id: int, name:str):
